@@ -17,95 +17,90 @@ export class GildedRose {
     this.items = items;
   }
 
-  updateQuality() {
-    for (let i = 0; i < this.items.length; i++) {
-      if (this.items[i].name != 'Aged Brie' && this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
-        // The Quality of an item is never negative
-        if (this.items[i].quality > 0) {
+  modifyQualityBy1(quality: number, mode: string) {
+    if (quality < 50 && mode == 'increase') {
+      quality = quality + 1;
+    }
 
-          // "Sulfuras", being a legendary item, never has to be sold or decreases in Quality
-          if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-            this.items[i].quality = this.items[i].quality - 1
-          }
+    if (quality > 0 && mode == 'decrease') {
+      quality = quality - 1;
+    }
 
-          // "Conjured" items degrade in Quality twice as fast as normal items
-          if (this.items[i].name == 'Conjured' && this.items[i].quality > 0) {
-            this.items[i].quality = this.items[i].quality - 1
-          }
-        }
+    return quality;
+  }
 
-      } else {
+  updateQualityForAgedBrie(item: Item) {
+    item.quality = this.modifyQualityBy1(item.quality, 'increase');
+  }
 
-        // The Quality of an item is never more than 50
-        if (this.items[i].quality < 50) {
-          // "Aged Brie" actually increases in Quality the older it gets
-          this.items[i].quality = this.items[i].quality + 1
+  updateQualityForBackstage(item: Item) {
+    if (item.sellIn < 0) {
+      item.quality = 0;
+      return;
+    }
 
-          if (this.items[i].name == 'Backstage passes to a TAFKAL80ETC concert') {
-            // Quality increases by 2 when there are 10 days or less
-            if (this.items[i].sellIn < 11) {
-              // The Quality of an item is never more than 50
-              if (this.items[i].quality < 50) {
-                this.items[i].quality = this.items[i].quality + 1
-              }
-            }
-
-            // Quality increases by 3 when there are 5 days or less
-            if (this.items[i].sellIn < 6) {
-              // The Quality of an item is never more than 50
-              if (this.items[i].quality < 50) {
-                this.items[i].quality = this.items[i].quality + 1
-              }
-            }
-          }
-        }
+    if (item.sellIn < 6) {
+      for (let i = 0; i < 3; i++) {
+        item.quality = this.modifyQualityBy1(item.quality, 'increase');
       }
 
-      // "Sulfuras", being a legendary item, never has to be sold or decreases in Quality
+      return;
+    }
+
+    if (item.sellIn < 11) {
+      for (let i = 0; i < 2; i++) {
+        item.quality = this.modifyQualityBy1(item.quality, 'increase');
+      }
+
+      return;
+    }
+
+
+    item.quality = this.modifyQualityBy1(item.quality, 'increase');
+  }
+
+  updateQualityForConjured(item: Item) {
+    if (item.sellIn < 0) {
+      for (let i = 0; i < 4; i++) {
+        item.quality = this.modifyQualityBy1(item.quality, 'decrease');
+      }
+      return;
+    }
+
+    for (let i = 0; i < 2; i++) {
+      item.quality = this.modifyQualityBy1(item.quality, 'decrease');
+    }
+  }
+
+  modifyQualityForItem(item: Item) {
+    switch (item.name) {
+      case 'Aged Brie':
+        this.updateQualityForAgedBrie(item);
+        break;
+      case 'Backstage passes to a TAFKAL80ETC concert':
+        this.updateQualityForBackstage(item);
+        break;
+      case 'Conjured':
+        this.updateQualityForConjured(item);
+        break;
+      case 'Sulfuras, Hand of Ragnaros':
+        break;
+      default:
+        item.quality = this.modifyQualityBy1(item.quality, 'decrease');
+        break;
+    }
+  }
+
+  updateQuality() {
+    for (let i = 0; i < this.items.length; i++) {
+      this.modifyQualityForItem(this.items[i]);
+
       if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
         this.items[i].sellIn = this.items[i].sellIn - 1;
       }
 
-      // The sell by date has passed
       if (this.items[i].sellIn < 0) {
-        if (this.items[i].name != 'Aged Brie') {
-
-          // "Backstage passes", like aged brie, increases in Quality as its SellIn value approaches;
-          if (this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
-
-            // The Quality of an item is never negative
-            if (this.items[i].quality > 0) {
-              // "Sulfuras", being a legendary item, never has to be sold or decreases in Quality
-              if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-                this.items[i].quality = this.items[i].quality - 1
-              }
-
-              // For 'Conjured' items
-              if (this.items[i].name == 'Conjured') {
-                // Decrease the quality three more times
-                for (let index = 0; index < 3; index++) {
-                  // Verify if the quality is positive
-                  if (this.items[i].quality > 0) {
-                    this.items[i].quality = this.items[i].quality - 1;
-                  }
-                }
-              }
-            }
-
-          } else {
-            // Quality drops to 0 after the concert
-            this.items[i].quality = this.items[i].quality - this.items[i].quality
-          }
-
-        } else {
-
-          // The Quality of an item is never more than 50
-          if (this.items[i].quality < 50) {
-
-            // "Aged Brie" actually increases in Quality the older it gets
-            this.items[i].quality = this.items[i].quality + 1
-          }
-        }
+        this.modifyQualityForItem(this.items[i]);
       }
     }
 
