@@ -29,6 +29,12 @@ export class GildedRose {
     return quality;
   }
 
+  modifyQualityBy(n: number, item: Item, mode: string) {
+    for (let i = 0; i < n; i++) {
+      item.quality = this.modifyQualityBy1(item.quality, mode);
+    }
+  }
+
   updateQualityForAgedBrie(item: Item) {
     item.quality = this.modifyQualityBy1(item.quality, 'increase');
   }
@@ -40,36 +46,25 @@ export class GildedRose {
     }
 
     if (item.sellIn < 6) {
-      for (let i = 0; i < 3; i++) {
-        item.quality = this.modifyQualityBy1(item.quality, 'increase');
-      }
-
+      this.modifyQualityBy(3, item, "increase");
       return;
     }
 
     if (item.sellIn < 11) {
-      for (let i = 0; i < 2; i++) {
-        item.quality = this.modifyQualityBy1(item.quality, 'increase');
-      }
-
+      this.modifyQualityBy(2, item, "increase");
       return;
     }
-
 
     item.quality = this.modifyQualityBy1(item.quality, 'increase');
   }
 
   updateQualityForConjured(item: Item) {
     if (item.sellIn < 0) {
-      for (let i = 0; i < 4; i++) {
-        item.quality = this.modifyQualityBy1(item.quality, 'decrease');
-      }
+      this.modifyQualityBy(4, item, "decrease");
       return;
     }
 
-    for (let i = 0; i < 2; i++) {
-      item.quality = this.modifyQualityBy1(item.quality, 'decrease');
-    }
+    this.modifyQualityBy(2, item, "decrease");
   }
 
   modifyQualityForItem(item: Item) {
@@ -92,17 +87,17 @@ export class GildedRose {
   }
 
   updateQuality() {
-    for (let i = 0; i < this.items.length; i++) {
-      this.modifyQualityForItem(this.items[i]);
+    this.items.forEach(item => {
+      this.modifyQualityForItem(item);
 
-      if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-        this.items[i].sellIn = this.items[i].sellIn - 1;
+      if (item.name != 'Sulfuras, Hand of Ragnaros') {
+        item.sellIn = item.sellIn - 1;
       }
 
-      if (this.items[i].sellIn < 0) {
-        this.modifyQualityForItem(this.items[i]);
+      if (item.sellIn < 0) {
+        this.modifyQualityForItem(item);
       }
-    }
+    });
 
     return this.items;
   }
