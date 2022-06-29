@@ -252,4 +252,50 @@ describe('Gilded Rose', () => {
       expect(items[0].sellIn).to.equal(9);
     });
   });
+
+  describe('Conjured', () => {
+    it('should decrease in quality twice as fast', () => {
+      // Given
+      const gildedRose = new GildedRose([new Item('Conjured', 10, 30)]);
+
+      // When
+      const items = gildedRose.updateQuality();
+
+      // Then
+      expect(items[0].quality).to.equal(28);
+    });
+
+    it('should quality be less or equal to 50', () => {
+      // Given
+      const gildedRose = new GildedRose([new Item('Conjured', 10, 50)]);
+
+      // When
+      const items = gildedRose.updateQuality();
+
+      // Then
+      expect(items[0].quality).to.lessThanOrEqual(50);
+    });
+
+    it('should quality not decrease if it reaches 0', () => {
+      // Given
+      const gildedRose = new GildedRose([new Item('Conjured', 0, 3)]);
+
+      // When
+      const items = gildedRose.updateQuality();
+
+      // Then
+      expect(items[0].quality).to.equal(0);
+    });
+
+    it('should quality degrade by 4 when the sell by date has passed', () => {
+      // Given
+      const gildedRose = new GildedRose([new Item('Conjured', 0, 8)]);
+
+      // When
+      const items = gildedRose.updateQuality();
+
+      // Then
+      expect(items[0].quality).to.equal(2);
+    });
+  });
 });

@@ -27,6 +27,11 @@ export class GildedRose {
           if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
             this.items[i].quality = this.items[i].quality - 1
           }
+
+          // "Conjured" items degrade in Quality twice as fast as normal items
+          if (this.items[i].name == 'Conjured' && this.items[i].quality > 0) {
+            this.items[i].quality = this.items[i].quality - 1
+          }
         }
 
       } else {
@@ -73,6 +78,17 @@ export class GildedRose {
               // "Sulfuras", being a legendary item, never has to be sold or decreases in Quality
               if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
                 this.items[i].quality = this.items[i].quality - 1
+              }
+
+              // For 'Conjured' items
+              if (this.items[i].name == 'Conjured') {
+                // Decrease the quality three more times
+                for (let index = 0; index < 3; index++) {
+                  // Verify if the quality is positive
+                  if (this.items[i].quality > 0) {
+                    this.items[i].quality = this.items[i].quality - 1;
+                  }
+                }
               }
             }
 
