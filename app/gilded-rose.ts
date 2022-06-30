@@ -10,6 +10,18 @@ export class Item {
   }
 }
 
+enum Mode {
+  Increase = 'increase',
+  Decrease = 'decrease'
+}
+
+enum Type {
+  Aged = 'Aged Brie',
+  Backstage = 'Backstage passes to a TAFKAL80ETC concert',
+  Conjured = 'Conjured',
+  Sulfuras = 'Sulfuras, Hand of Ragnaros'
+}
+
 export class GildedRose {
   items: Array<Item>;
 
@@ -17,52 +29,89 @@ export class GildedRose {
     this.items = items;
   }
 
-  updateQuality() {
-    for (let i = 0; i < this.items.length; i++) {
-      if (this.items[i].name != 'Aged Brie' && this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
-        if (this.items[i].quality > 0) {
-          if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-            this.items[i].quality = this.items[i].quality - 1
-          }
-        }
-      } else {
-        if (this.items[i].quality < 50) {
-          this.items[i].quality = this.items[i].quality + 1
-          if (this.items[i].name == 'Backstage passes to a TAFKAL80ETC concert') {
-            if (this.items[i].sellIn < 11) {
-              if (this.items[i].quality < 50) {
-                this.items[i].quality = this.items[i].quality + 1
-              }
-            }
-            if (this.items[i].sellIn < 6) {
-              if (this.items[i].quality < 50) {
-                this.items[i].quality = this.items[i].quality + 1
-              }
-            }
-          }
-        }
-      }
-      if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-        this.items[i].sellIn = this.items[i].sellIn - 1;
-      }
-      if (this.items[i].sellIn < 0) {
-        if (this.items[i].name != 'Aged Brie') {
-          if (this.items[i].name != 'Backstage passes to a TAFKAL80ETC concert') {
-            if (this.items[i].quality > 0) {
-              if (this.items[i].name != 'Sulfuras, Hand of Ragnaros') {
-                this.items[i].quality = this.items[i].quality - 1
-              }
-            }
-          } else {
-            this.items[i].quality = this.items[i].quality - this.items[i].quality
-          }
-        } else {
-          if (this.items[i].quality < 50) {
-            this.items[i].quality = this.items[i].quality + 1
-          }
-        }
-      }
+  modifyQualityBy1(quality: number, mode: Mode) {
+    if (quality < 50 && mode == Mode.Increase) {
+      quality++;
     }
+
+    if (quality > 0 && mode == Mode.Decrease) {
+      quality--;
+    }
+
+    return quality;
+  }
+
+  modifyQualityBy(n: number, item: Item, mode: Mode) {
+    for (let i = 0; i < n; i++) {
+      item.quality = this.modifyQualityBy1(item.quality, mode);
+    }
+  }
+
+  updateQualityForAgedBrie(item: Item) {
+    item.quality = this.modifyQualityBy1(item.quality, Mode.Increase);
+  }
+
+  updateQualityForBackstage(item: Item) {
+    if (item.sellIn < 0) {
+      item.quality = 0;
+      return;
+    }
+
+    if (item.sellIn < 6) {
+      this.modifyQualityBy(3, item, Mode.Increase);
+      return;
+    }
+
+    if (item.sellIn < 11) {
+      this.modifyQualityBy(2, item, Mode.Increase);
+      return;
+    }
+
+    item.quality = this.modifyQualityBy1(item.quality, Mode.Increase);
+  }
+
+  updateQualityForConjured(item: Item) {
+    if (item.sellIn < 0) {
+      this.modifyQualityBy(4, item, Mode.Decrease);
+      return;
+    }
+
+    this.modifyQualityBy(2, item, Mode.Decrease);
+  }
+
+  modifyQualityForItem(item: Item) {
+    switch (item.name) {
+      case Type.Aged:
+        this.updateQualityForAgedBrie(item);
+        break;
+      case Type.Backstage:
+        this.updateQualityForBackstage(item);
+        break;
+      case Type.Conjured:
+        this.updateQualityForConjured(item);
+        break;
+      case Type.Sulfuras:
+        break;
+      default:
+        item.quality = this.modifyQualityBy1(item.quality, Mode.Decrease);
+        break;
+    }
+  }
+
+  updateQuality() {
+    this.items.forEach(item => {
+      this.modifyQualityForItem(item);
+
+      if (item.name != Type.Sulfuras) {
+        item.sellIn--;
+      }
+
+      // when the sell by day has passed, the quality for
+      // each item will modify accordingly
+      if (item.sellIn < 0) {
+        this.modifyQualityForItem(item);
+      }
+    });
 
     return this.items;
   }
